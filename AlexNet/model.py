@@ -29,6 +29,7 @@ class AlexNet(nn.module):
                 nn.MaxPool2d(kernel_size=3, stride=2),
                 nn.Conv2d(in_channels=96, out_channels=256, kernel_size=5, padding=2),
                 nn.ReLU(),
+                nn.LocalResponseNorm(size=5, alpha=0.0001, beta=0.75, k=2),
                 nn.MaxPool2d(kernel_size=3, stride=2),
                 nn.Conv2d(in_channels=256, out_channels=384, kernel_size=3, padding=1),
                 nn.ReLU(),
@@ -49,21 +50,36 @@ class AlexNet(nn.module):
             nn.Linear(in_features=4096, out_features=num_classes),
         )
 
-        #TODO: Initialize biases
+        '''
+        Weight initializations according to paper
+        '''
 
+        nn.init.normal_(self.conv[0].weight, mean=0, std=0.01)
+        nn.init.normal_(self.conv[4].weight, mean=0, std=0.01)
+        nn.init.normal_(self.conv[8].weight, mean=0, std=0.01)
+        nn.init.normal_(self.conv[10].weight, mean=0, std=0.01)
+        nn.init.normal_(self.conv[12].weight, mean=0, std=0.01)
 
+        nn.init.constant_(self.conv[0].bias, 0)
+        nn.init.constant_(self.conv[4].bias, 1)
+        nn.init.constant_(self.conv[8].bias, 0)
+        nn.init.constant_(self.conv[10].bias, 1)
+        nn.init.constant_(self.conv[12].bias, 1)
 
+        nn.init.normal_(self.FC[1].weight, mean=0, std=0.01)
+        nn.init.normal_(self.FC[4].weight, mean=0, std=0.01)
+        nn.init.normal_(self.FC[6].weight, mean=0, std=0.01)
 
+        nn.init.constant_(self.FC[1].bias, 1)
+        nn.init.constant_(self.FC[4].bias, 1)
+        nn.init.constant_(self.FC[6].bias, 1)
 
     def forward(self, x):
         x = self.conv(x)
         x = x.view(-1, self.conv_output_size)
-        x = self.FC(x)
-        
-        return x
+        x = self.FC(x) 
 
-    def train(self):
-        pass
+        return x
 
     def load_weights(self):
         pass
