@@ -13,7 +13,7 @@ import torch.optim as optim
 
 class AlexNet(nn.module):
     #TODO: Calculate correct conv_output_size
-    def __init__(self, image_width=60, image_height=60, image_channels=3, num_classes=10, conv_output_size=(6 * 6 * 256)):
+    def __init__(self, image_width=60, image_height=60, image_channels=3, num_classes=10):
         super.__init__()
 
         self.input_width = image_width
@@ -39,6 +39,9 @@ class AlexNet(nn.module):
                 nn.ReLU(),
                 nn.MaxPool2d(kernel_size=3, stride=2),
         )
+
+        x = np.zeroes((self.input_width, self.input_height))
+        conv_output_size = self.conv(x).numel()
 
         self.FC = nn.Sequential(
             nn.Dropout(p=0.5, inplace=True),
@@ -89,5 +92,3 @@ class AlexNet(nn.module):
 
 if __name__ == "__main__":
     pass
-
-
