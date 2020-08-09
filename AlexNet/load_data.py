@@ -66,6 +66,9 @@ def get_cifar_10(image_width, image_height, cifar_path = '../cifar-10-batches-py
         X_test[i] = X
         Y_test[i] = Y
 
+    X_train = np.transpose(X_train, axes=[0, 3, 2, 1])
+    X_test = np.transpose(X_test, axes=[0, 3, 2, 1])
+
     return X_train, Y_train, X_test, Y_test
 
 if __name__ == "__main__":
