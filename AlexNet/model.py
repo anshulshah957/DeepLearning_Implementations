@@ -10,6 +10,8 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.utils.data import TensorDataset, DataLoader
+from load_data import get_cifar_10
 
 class AlexNet(nn.module):
     #TODO: Calculate correct conv_output_size
@@ -86,8 +88,11 @@ class AlexNet(nn.module):
 
     def load_weights(self):
         pass
-    
-    
+
+    def load_dataset(self, X_train, Y_train, X_test, Y_test):
+        self.train_dataset = TensorDataset((X_train, Y_train))
+        self.test_dataset = TensorDataset((X_test, Y_test))
+ 
     #TODO: Use multiple GPUs
     def train(self, device, learning_rate=0.01, learning_momentum=0.9, learning_decay=0005, num_epochs=90, batch_size=128):
         
@@ -101,5 +106,14 @@ class AlexNet(nn.module):
 
 
 if __name__ == "__main__":
-    #TODO: load CIFAR 10 data into correct format for pytorch
-    pass
+    alexNet = AlexNet()
+
+    X_train, Y_train, X_test, Y_test = get_cifar_10(70, 70)
+
+    alexNet.load_dataset(torch.Tensor(X_train), torch.Tensor(Y_train), torch.Tensor(X_test), torch.Tensor(Y_test))
+
+    device = torch.device('cpu')
+    if torch.cuda.is_available():
+        device = torch.device('cuda')
+
+
