@@ -1,7 +1,7 @@
 import os
 import pickle
 import numpy as np
-from scipy import misc
+from PIL import Image
 
 def unpickle(fp):
     load_dict = 0
@@ -41,7 +41,7 @@ def get_cifar_10(image_width, image_height, cifar_path = '../cifar-10-batches-py
             image = batch[b'data'][i].reshape(3, 32, 32).transpose([1, 2, 0])
             label = batch[b'labels'][i]
 
-            X = misc.imresize(image, size=(image_height, image_width), interp='bicubic')
+            X = np.array(Image.fromarray(image).resize((image_width, image_height)))
             Y = np.zeros(shape=[len(classes)], dtype=np.int)
             Y[label] = 1
 
@@ -59,7 +59,7 @@ def get_cifar_10(image_width, image_height, cifar_path = '../cifar-10-batches-py
         image = test_batch[b'data'][i].reshape(3, 32, 32).transpose([1, 2, 0])
         label = test_batch[b'labels'][i]
 
-        X = misc.imresize(image, size=(image_height, image_width), interp='bicubic')
+        X = np.array(Image.fromarray(image).resize((image_width, image_height)))
         Y = np.zeros(shape=[len(classes)], dtype=np.int)
         Y[label] = 1
 
@@ -67,4 +67,8 @@ def get_cifar_10(image_width, image_height, cifar_path = '../cifar-10-batches-py
         Y_test[i] = Y
 
     return X_train, Y_train, X_test, Y_test
+
+if __name__ == "__main__":
+    x, _, _, _ = get_cifar_10(70, 70)
+    print(x.shape)
 
