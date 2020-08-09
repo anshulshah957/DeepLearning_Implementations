@@ -93,13 +93,14 @@ class AlexNet(nn.Module):
 
         return x
 
+    #TODO: add load and checkpointint in training
     def load_weights(self):
         pass
 
     def load_dataset(self, X_train, Y_train, X_test, Y_test, batch_size=128):
         #TODO: add data augmentation
-        train_dataset = TensorDataset((X_train, Y_train))
-        test_dataset = TensorDataset((X_test, Y_test))
+        train_dataset = TensorDataset(X_train, Y_train)
+        test_dataset = TensorDataset(X_test, Y_test)
 
         self.train_dataloader = data.DataLoader(train_dataset, shuffle=True, pin_memory=True, num_workers=8, drop_last=True, batch_size=batch_size)
         self.test_dataloader = data.DataLoader(test_dataset, shuffle=True, pin_memory=True, num_workers=8, drop_last=True, batch_size=batch_size)
@@ -114,9 +115,18 @@ class AlexNet(nn.Module):
         steps = 0
         for epoch in range(0, num_epochs):
             for imgs, classes in self.train_dataloader:
-                imgs, classes = imgs.to(device), classes.to(device)
+                imgs = imgs.to(device)
+
+                classes = classes.tolist()
+
+                for i, one_hot in enumerate(classes):
+                    classes[i] = [j for (j, elem) in enumerate(one_hot) if (elem == 1)][0]
+
+                classes = torch.from_numpy(np.array(classes))
+                classes = classes.to(device)
 
                 pred = self(imgs)
+
                 loss = cross_entropy(pred, classes)
 
                 optimizer.zero_grad()
@@ -124,8 +134,8 @@ class AlexNet(nn.Module):
                 optimizer.step()
                 
                 #Temporary debugging, add log to something like tensorboard later
+                print("Loss:")
                 print(loss.item())
-                print(accuracy.item())
 
 if __name__ == "__main__":
     device = torch.device('cpu')
