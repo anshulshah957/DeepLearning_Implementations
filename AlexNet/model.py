@@ -15,6 +15,7 @@ from torch.utils.data import TensorDataset, DataLoader
 from torch.utils import data
 from load_data import get_cifar_10
 from torch.nn.functional import cross_entropy
+from tensorboardX import SummaryWriter
 
 class AlexNet(nn.Module):
     #TODO: Calculate correct conv_output_size
@@ -107,13 +108,18 @@ class AlexNet(nn.Module):
 
  
     #TODO: Use multiple GPUs
-    def train(self, device, learning_rate=0.01, learning_momentum=0.9, learning_decay=0.0005, num_epochs=90):
+    def train(self, device, learning_rate=0.01, learning_momentum=0.9, learning_decay=0.0005, num_epochs=90, logdir = os.path.abspath("logs"), checkdir=os.path.abspath("checkpoint")):
+        initial_seed = torch.initial_seed()
+
         
         optimizer = optim.SGD(params=self.parameters(), lr=learning_rate, momentum=learning_momentum, weight_decay=learning_decay)
+
+        tbwriter = SummaryWriter(log_dir=logdir)
         
         #TODO: divide the learning rate by 10 when the validation error rate stops improving with the current learning rate
         steps = 0
-        for epoch in range(0, num_epochs):
+        for epoch in range(1, num_epochs + 1):
+            print("Epoch: " + str(epoch))
             for imgs, classes in self.train_dataloader:
                 imgs = imgs.to(device)
 
@@ -142,6 +148,31 @@ class AlexNet(nn.Module):
                 #Temporary debugging, add log to something like tensorboard later
                 print("Loss:")
                 print(loss.item())
+
+                if steps % 8 == 0:
+                    with torch.no_grad():
+                        _, preds = torch.max(pred, 1)
+
+                        print('Epoch: {} \tStep: {} \tLoss: {:.4f}'.format(epoch, steps, loss.item()))
+
+                        tbwriter.add_scalar('loss', loss.item(), steps)
+
+
+                steps += 1
+
+
+            checkpoint_path = os.path.join(checkdir, 'alexnet_weights_epoch{}.pkl'.format(epoch))
+
+            state = {
+                'epoch': epoch,
+                'total_steps': steps,
+                'optimizer': optimizer.state_dict(),
+                'model': self.state_dict(),
+                'seed': initial_seed,
+            }
+
+            torch.save(state, checkpoint_path)
+
 
 if __name__ == "__main__":
     device = torch.device('cpu')
