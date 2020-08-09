@@ -131,6 +131,12 @@ class AlexNet(nn.Module):
 
                 optimizer.zero_grad()
                 loss.backward()
+                
+                #Uncomment below to debug gradient update
+                #for param in self.parameters():
+                    #print(param.grad.data.sum())
+
+
                 optimizer.step()
                 
                 #Temporary debugging, add log to something like tensorboard later
