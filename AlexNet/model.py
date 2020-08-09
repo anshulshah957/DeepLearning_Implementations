@@ -86,9 +86,20 @@ class AlexNet(nn.module):
 
     def load_weights(self):
         pass
+    
+    
+    #TODO: Use multiple GPUs
+    def train(self, device, learning_rate=0.01, learning_momentum=0.9, learning_decay=0005, num_epochs=90, batch_size=128):
+        
+        optimizer = optim.SGD(params=self.parameters(), lr=learning_rate, momentum=learning_momentum, weight_decay=learning_decay)
+        
+        #TODO: divide the learning rate by 10 when the validation error rate stops improving with the current learning rate
+        for epoch in range(0, num_epochs):
+            pass
+        
+        return
 
-    def train(self, learning_rate=0.01, momentum=0.9):
-        pass
 
 if __name__ == "__main__":
+    #TODO: load CIFAR 10 data into correct format for pytorch
     pass
