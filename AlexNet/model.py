@@ -94,7 +94,7 @@ class AlexNet(nn.Module):
 
         return x
 
-    #TODO: add load and checkpointint in training
+    #TODO: add loading for checkpointing in training
     def load_weights(self):
         pass
 
@@ -115,11 +115,14 @@ class AlexNet(nn.Module):
         optimizer = optim.SGD(params=self.parameters(), lr=learning_rate, momentum=learning_momentum, weight_decay=learning_decay)
 
         tbwriter = SummaryWriter(log_dir=logdir)
+
+        lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.1, last_epoch=-1)
         
         #TODO: divide the learning rate by 10 when the validation error rate stops improving with the current learning rate
         steps = 0
         for epoch in range(1, num_epochs + 1):
             print("Epoch: " + str(epoch))
+            lr_scheduler.step()
             for imgs, classes in self.train_dataloader:
                 imgs = imgs.to(device)
 
@@ -161,7 +164,7 @@ class AlexNet(nn.Module):
                 steps += 1
 
 
-            checkpoint_path = os.path.join(checkdir, 'alexnet_weights_epoch{}.pkl'.format(epoch))
+            checkpoint_path = os.path.join(checkdir, 'alexnet_weights_epoch_2_{}.pkl'.format(epoch))
 
             state = {
                 'epoch': epoch,
