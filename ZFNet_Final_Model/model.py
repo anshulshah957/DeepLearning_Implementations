@@ -5,8 +5,7 @@ https://arxiv.org/pdf/1311.2901.pdf
 '''
 
 
-#TODOs: Update init, forward, train functions for zfnet and add additionals
-#TODO: Add softmax at output
+#TODOs: Update train function for zfnet
 
 import os
 import numpy as np
@@ -147,7 +146,7 @@ class ZFNet(nn.Module):
 
 
                 optimizer.step()
-                
+                #TODO: Add tensorboard logging
                 #Temporary debugging, add log to something like tensorboard later
                 print("Loss:")
                 print(loss.item())
