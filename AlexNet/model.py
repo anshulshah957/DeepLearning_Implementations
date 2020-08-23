@@ -61,6 +61,7 @@ class AlexNet(nn.Module):
             nn.Linear(in_features=4096, out_features=4096),
             nn.ReLU(),
             nn.Linear(in_features=4096, out_features=num_classes),
+            nn.Softmax(dim=1),
         )
 
         '''
@@ -163,18 +164,19 @@ class AlexNet(nn.Module):
 
                 steps += 1
 
+            
+            if epoch % 10 == 0:
+                checkpoint_path = os.path.join(checkdir, 'alexnet_weights_epoch_2_{}.pkl'.format(epoch))
 
-            checkpoint_path = os.path.join(checkdir, 'alexnet_weights_epoch_2_{}.pkl'.format(epoch))
+                state = {
+                    'epoch': epoch,
+                    'total_steps': steps,
+                    'optimizer': optimizer.state_dict(),
+                    'model': self.state_dict(),
+                    'seed': initial_seed,
+                }
 
-            state = {
-                'epoch': epoch,
-                'total_steps': steps,
-                'optimizer': optimizer.state_dict(),
-                'model': self.state_dict(),
-                'seed': initial_seed,
-            }
-
-            torch.save(state, checkpoint_path)
+                torch.save(state, checkpoint_path)
 
 
 if __name__ == "__main__":
