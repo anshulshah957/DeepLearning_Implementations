@@ -2,6 +2,8 @@
 ResNet Implementation from:
 K. He, X. Zhang, S. Ren and J. Sun, "Deep Residual Learning for Image Recognition," 2016 IEEE Conference on Computer Vision and Pattern Recognition (CVPR), Las Vegas, NV, 2016, pp. 770-778, doi: 10.1109/CVPR.2016.90.
 https://arxiv.org/pdf/1512.03385.pdf
+
+Resnet-18 implementation
 '''
 
 import os
@@ -14,6 +16,30 @@ from torch.utils import data
 from load_data import get_cifar_10
 from torch.nn.functional import cross_entropy
 from tensorboardX import SummaryWriter
+
+
+class Res_Block(nn.Module):
+    def __init__(self, in_channels, out_channels, stride=1):
+        self.conv = nn.Sequential(
+            nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False),
+            nn.BatchNorm2d(out_channels),
+        )
+
+        self.relu = nn.ReLU(inplace=True)
+    
+    def forward(self, x):
+        i = x
+
+        x = self.conv(x)
+        x = x + i
+        x = self.relu(x)
+
+        return x
+
+
 
 class ResNet(nn.Module):
     #TODO: Calculate correct conv_output_size
