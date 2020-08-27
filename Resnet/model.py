@@ -26,7 +26,7 @@ class Res_Block(nn.Module):
             nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False),
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
-            nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False),
+            nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(out_channels),
         )
 
@@ -51,6 +51,7 @@ class Res_Block(nn.Module):
 
         return x
 
+#TODO: Add weight initializations
 class ResNet18(nn.Module):
     def __init__(self, image_width=60, image_height=60, image_channels=3, num_classes=10):
         self.input_channels = image_channels
@@ -65,96 +66,31 @@ class ResNet18(nn.Module):
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
         )
 
-        self.layer_1 = 
-
-    
-    def forward(self):
-        pass
-
-
-
-
-class AlexNet(nn.Module):
-    #TODO: Calculate correct conv_output_size
-    def __init__(self, image_width=60, image_height=60, image_channels=3, num_classes=10):
-        super().__init__()
-
-        self.input_width = image_width
-        self.input_height = image_height
-        self.input_channels = image_channels
-        self.num_classes = num_classes
-
-        self.conv = nn.Sequential(
-                nn.Conv2d(in_channels=self.input_channels, out_channels=96, kernel_size=11, stride=4),
-                nn.ReLU(),
-                nn.LocalResponseNorm(size=5, alpha=0.0001, beta=0.75, k=2),
-                nn.MaxPool2d(kernel_size=3, stride=2),
-                nn.Conv2d(in_channels=96, out_channels=256, kernel_size=5, padding=2),
-                nn.ReLU(),
-                nn.LocalResponseNorm(size=5, alpha=0.0001, beta=0.75, k=2),
-                nn.MaxPool2d(kernel_size=3, stride=2),
-                nn.Conv2d(in_channels=256, out_channels=384, kernel_size=3, padding=1),
-                nn.ReLU(),
-                nn.Conv2d(in_channels=384, out_channels=384, kernel_size=3, padding=1),
-                nn.ReLU(),
-                nn.Conv2d(in_channels=384, out_channels=256, kernel_size=3, padding=1),
-                nn.ReLU(),
-                nn.MaxPool2d(kernel_size=3, stride=2),
+        self.res_layers = nn.Sequential(
+            Res_Block(64, 64),
+            Res_Block(64, 64),
+            Res_Block(64, 128, stride=2, downsample=True),
+            Res_Block(128, 128),
+            Res_Block(128, 256, stride=2, downsample=True),
+            Res_Block(256, 256),
+            Res_Block(256, 512, stride=2, downsample=True),
+            Res_Block(512, 512),
         )
 
-        x = np.zeros((3, self.input_width, self.input_height))
-        x = torch.Tensor(x)
-        x = x.unsqueeze(0)
+        self.GAP = nn.AdaptiveAvgPool2d((1, 1))
 
-        conv_output_size = self.conv(x).numel()
-
-        self.conv_output_size = conv_output_size
-
-        self.FC = nn.Sequential(
-            nn.Dropout(p=0.5, inplace=True),
-            nn.Linear(in_features=conv_output_size, out_features=4096),
-            nn.ReLU(),
-            nn.Dropout(p=0.5, inplace=True),
-            nn.Linear(in_features=4096, out_features=4096),
-            nn.ReLU(),
-            nn.Linear(in_features=4096, out_features=num_classes),
-            nn.Softmax(dim=1),
-        )
-
-        '''
-        Weight and Bias initializations according to paper
-        '''
-
-        nn.init.normal_(self.conv[0].weight, mean=0, std=0.01)
-        nn.init.normal_(self.conv[4].weight, mean=0, std=0.01)
-        nn.init.normal_(self.conv[8].weight, mean=0, std=0.01)
-        nn.init.normal_(self.conv[10].weight, mean=0, std=0.01)
-        nn.init.normal_(self.conv[12].weight, mean=0, std=0.01)
-
-        nn.init.constant_(self.conv[0].bias, 0)
-        nn.init.constant_(self.conv[4].bias, 1)
-        nn.init.constant_(self.conv[8].bias, 0)
-        nn.init.constant_(self.conv[10].bias, 1)
-        nn.init.constant_(self.conv[12].bias, 1)
-
-        nn.init.normal_(self.FC[1].weight, mean=0, std=0.01)
-        nn.init.normal_(self.FC[4].weight, mean=0, std=0.01)
-        nn.init.normal_(self.FC[6].weight, mean=0, std=0.01)
-
-        nn.init.constant_(self.FC[1].bias, 1)
-        nn.init.constant_(self.FC[4].bias, 1)
-        nn.init.constant_(self.FC[6].bias, 1)
-
+        self.FC = nn.Linear(512, self.num_classes)
+         
     def forward(self, x):
-        x = self.conv(x)
-        x = x.view(-1, self.conv_output_size)
-        x = self.FC(x) 
+        x = self.conv1(x)
+        x = self.res_layers(x)
+
+        x = self.GAP(x)
+        x = torch.flatten(x, 1)
+
+        x = self.FC(x)
 
         return x
-
-    #TODO: add loading for checkpointing in training
-    def load_weights(self):
-        pass
 
     def load_dataset(self, X_train, Y_train, X_test, Y_test, batch_size=128):
         #TODO: add data augmentation
@@ -163,9 +99,8 @@ class AlexNet(nn.Module):
 
         self.train_dataloader = data.DataLoader(train_dataset, shuffle=True, pin_memory=True, num_workers=8, drop_last=True, batch_size=batch_size)
         self.test_dataloader = data.DataLoader(test_dataset, shuffle=True, pin_memory=True, num_workers=8, drop_last=True, batch_size=batch_size)
-
- 
-    #TODO: Use multiple GPUs
+    
+    #TODO: Update train script to resnet specifications
     def train(self, device, learning_rate=0.01, learning_momentum=0.9, learning_decay=0.0005, num_epochs=90, logdir = os.path.abspath("logs"), checkdir=os.path.abspath("checkpoint")):
         initial_seed = torch.initial_seed()
 
@@ -241,11 +176,11 @@ if __name__ == "__main__":
     if torch.cuda.is_available():
         device = torch.device('cuda')
 
-    alexNet = AlexNet(70, 70).to(device)
+    resnet = ResNet18(70, 70).to(device)
 
     X_train, Y_train, X_test, Y_test = get_cifar_10(70, 70)
 
-    alexNet.load_dataset(torch.Tensor(X_train), torch.Tensor(Y_train), torch.Tensor(X_test), torch.Tensor(Y_test))
+    resnet.load_dataset(torch.Tensor(X_train), torch.Tensor(Y_train), torch.Tensor(X_test), torch.Tensor(Y_test))
     
-    alexNet.train(device)
+    resnet.train(device)
 
