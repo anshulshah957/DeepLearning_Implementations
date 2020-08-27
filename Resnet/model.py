@@ -20,6 +20,7 @@ from tensorboardX import SummaryWriter
 
 class Res_Block(nn.Module):
     def __init__(self, in_channels, out_channels, stride=1, downsample = False):
+        super().__init__()
         self.downsample = downsample
 
         self.conv = nn.Sequential(
@@ -54,9 +55,10 @@ class Res_Block(nn.Module):
 #TODO: Add weight initializations
 class ResNet18(nn.Module):
     def __init__(self, image_width=60, image_height=60, image_channels=3, num_classes=10):
-        self.input_channels = image_channels
+        super().__init__()
+        self.in_channels = image_channels
         self.input_height = image_height
-        self.input_width - image_width
+        self.input_width = image_width
         self.num_classes = num_classes
 
         self.conv1 = nn.Sequential(
