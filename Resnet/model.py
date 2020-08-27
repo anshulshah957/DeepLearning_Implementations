@@ -45,7 +45,7 @@ class Res_Block(nn.Module):
         x = self.conv(x)
 
         if self.downsample:
-            x = self.downsample_layer(x)
+            i = self.downsample_layer(i)
             
         x = x + i
         x = self.relu(x)
