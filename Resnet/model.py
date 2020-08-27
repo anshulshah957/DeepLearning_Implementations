@@ -19,7 +19,9 @@ from tensorboardX import SummaryWriter
 
 
 class Res_Block(nn.Module):
-    def __init__(self, in_channels, out_channels, stride=1):
+    def __init__(self, in_channels, out_channels, stride=1, downsample = False):
+        self.downsample = downsample
+
         self.conv = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False),
             nn.BatchNorm2d(out_channels),
@@ -28,20 +30,51 @@ class Res_Block(nn.Module):
             nn.BatchNorm2d(out_channels),
         )
 
+        if self.downsample:
+            self.downsample_layer = nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=2, bias=False),
+                nn.BatchNorm2d(out_channels),
+            )
+
         self.relu = nn.ReLU(inplace=True)
     
     def forward(self, x):
         i = x
 
         x = self.conv(x)
+
+        if self.downsample:
+            x = self.downsample_layer(x)
+            
         x = x + i
         x = self.relu(x)
 
         return x
 
+class ResNet18(nn.Module):
+    def __init__(self, image_width=60, image_height=60, image_channels=3, num_classes=10):
+        self.input_channels = image_channels
+        self.input_height = image_height
+        self.input_width - image_width
+        self.num_classes = num_classes
+
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(in_channels=self.in_channels, out_channels=64, kernel_size=7, stride=2, padding=3, bias=False),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
+        )
+
+        self.layer_1 = 
+
+    
+    def forward(self):
+        pass
 
 
-class ResNet(nn.Module):
+
+
+class AlexNet(nn.Module):
     #TODO: Calculate correct conv_output_size
     def __init__(self, image_width=60, image_height=60, image_channels=3, num_classes=10):
         super().__init__()
